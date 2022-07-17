@@ -1,0 +1,13 @@
+# vim: set ft=sh:
+#
+# false positive
+# shellcheck disable=2154
+
+print() {
+	printf '\033[1m[chaos] => %s\033[0m\n' "$@"
+}
+
+[ -h "/dev/disk/by-label/$disk_label" ] || sleep 5
+
+print "mounting disk: $disk_label"
+mount -t auto -o ro "/dev/disk/by-label/$disk_label" /run/mount || panic

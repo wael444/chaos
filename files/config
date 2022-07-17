@@ -1,0 +1,7 @@
+hooks="eudev,diskless"
+
+root=ram
+root_type=tmpfs
+root_opts="size=25%,mode=0755"
+
+disk_label=@@VOLID@@

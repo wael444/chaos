@@ -1,0 +1,31 @@
+# vim: set ft=sh:
+#
+# false positive
+# shellcheck disable=2045
+
+print() {
+	printf '\033[1m[chaos] => %s\033[0m\n' "$@"
+}
+
+cd /mnt/root || panic
+
+print 'extracting local packages: @@BASE_PKGS@@ ... '
+xbps-install -y --repository=/run/mount/pkgs -r /mnt/root @@BASE_PKGS@@ 1>/dev/null || panic
+
+print 'applying hostname: @@HOSTNAME@@ ... '
+echo @@HOSTNAME@@ > /mnt/root/etc/hostname
+
+print 'creating user: @@USERNAME@@ ... '
+{
+	chroot /mnt/root useradd -mG audio,video,input @@USERNAME@@ -s /bin/bash 
+	chroot /mnt/root sh -c 'echo "root:@@ROOTPASS@@" | chpasswd -c SHA512'
+	chroot /mnt/root sh -c 'echo "@@USERNAME@@:@@USERPASS@@" | chpasswd -c SHA512'
+	echo 'permit nopass @@USERNAME@@ as root' > /mnt/root/etc/doas.conf
+	sed -i "/GETTY_ARGS=/s/\"$/ --autologin @@USERNAME@@&/" /mnt/root/etc/sv/agetty-tty1/conf
+} || panic
+
+print 'enabling services: dhcpcd acpid ... '
+chroot /mnt/root ln -sf /etc/sv/dhcpcd /etc/runit/runsvdir/default || panic
+chroot /mnt/root ln -sf /etc/sv/acpid /etc/runit/runsvdir/default || panic
+
+umount /run/mount

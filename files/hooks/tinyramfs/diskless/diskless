@@ -1,0 +1,9 @@
+# vim: set ft=sh:
+# shellcheck shell=sh
+
+for _bin in xbps-install tar ls umount xz readlink \
+	chmod install chroot sed; do
+	copy_exec "$_bin"
+done
+
+copy_kmod cdrom
